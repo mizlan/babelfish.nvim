@@ -70,7 +70,6 @@ local function parse_markdown(parser, contents)
       -- local text = recursive_parser(node, contents, "")
       table.insert(formatted_file, text)
     end
-
   end
 
   table.insert(formatted_file, "vim:tw=78:ts=8:ft=help:norl:")
