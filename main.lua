@@ -40,6 +40,18 @@ local function convert_header(number, node, contents, out)
   table.insert(out, " ")
 end
 
+local function convert_fenced_code_block(node, contents, out)
+  local code_block = get_node_text(node, contents)
+  -- change the backticks to the respective carets
+  local formatted_start = string.gsub(code_block, '```.-\n', '>\n', 1)
+  local formatted_end = string.gsub(formatted_start, '```', '<', 1)
+  -- calculate the number of lines to avoid indenting the last line,
+  -- which is the delimter which should not be indented
+  local _, num_lines = string.gsub(vim.trim(formatted_end), '\n', '\n')
+  local formatted_indent = string.gsub(formatted_end, '\n', '\n  ', num_lines - 1)
+  table.insert(out, formatted_indent)
+end
+
 local function parse_markdown(parser, contents)
   local tstree = parser:parse()[1]
   local formatted_file = {}
@@ -51,6 +63,8 @@ local function parse_markdown(parser, contents)
     if node_type == tokens.heading then
       convert_header(header_count, node, contents, formatted_file)
       header_count = header_count + 1
+    elseif node_type == tokens.fenced_code_block then
+      convert_fenced_code_block(node, contents, formatted_file)
     else
       local text = get_node_text(node, contents)
       -- local text = recursive_parser(node, contents, "")
