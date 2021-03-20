@@ -28,6 +28,18 @@ local function recursive_parser(parent_node, content, concatenated_content)
   return concatenated_content
 end
 
+local function convert_header(number, node, contents, out)
+  table.insert(out, style_elements.header_break)
+  local text = get_node_text(node, contents)
+  text = string.gsub(text, "#*[ ]", "")
+  local left = string.format("%d. %s", number, text)
+  local right = string.format("*%s-%s*", metadata.project_name, string.lower(text))
+  local padding = string.rep(" ", 78 - #left - #right)
+  text = string.format("%s%s%s", left, padding, right)
+  table.insert(out, text)
+  table.insert(out, " ")
+end
+
 local function parse_markdown(parser, contents)
   local tstree = parser:parse()[1]
   local formatted_file = {}
@@ -37,16 +49,8 @@ local function parse_markdown(parser, contents)
   for node in parent_node:iter_children() do
     local node_type = node:type()
     if node_type == tokens.heading then
-      table.insert(formatted_file, style_elements.header_break)
-      local text = get_node_text(node, contents)
-      text = string.gsub(text, "#*[ ]", "")
-      local left = string.format("%d. %s", header_count, text)
-      local right = string.format("*%s-%s*", metadata.project_name, string.lower(text))
-      local padding = string.rep(" ", 78 - #left - #right)
-      text = string.format("%s%s%s", left, padding, right)
+      convert_header(header_count, node, contents, formatted_file)
       header_count = header_count + 1
-      table.insert(formatted_file, text)
-      table.insert(formatted_file, " ")
     else
       local text = get_node_text(node, contents)
       -- local text = recursive_parser(node, contents, "")
